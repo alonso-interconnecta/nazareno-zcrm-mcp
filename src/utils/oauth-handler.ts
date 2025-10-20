@@ -200,17 +200,17 @@ export class OAuthHandler {
 OAuth is not configured. Please:
 1. Set ZOHO_CLIENT_ID and ZOHO_CLIENT_SECRET in your .env file
 2. Restart the server
-3. Visit http://localhost:${config.server.port + 1}/oauth/authorize to complete OAuth flow
+3. Visit https://nazareno-zcrm-mcp.interconnecta.ai/oauth/authorize to complete OAuth flow
 
 Required Zoho OAuth Setup:
-- Redirect URI: http://localhost:${config.server.port + 1}/oauth/callback
+- Redirect URI: https://nazareno-zcrm-mcp.interconnecta.ai/oauth/callback
 - Scopes: ZohoCRM.modules.ALL, ZohoCRM.users.ALL, ZohoCRM.settings.ALL
 - OAuth Flow: Server-based (not self-client)
       `.trim();
     } else if (!hasTokens) {
       instructions = `
 OAuth is configured but no tokens found. Please:
-1. Visit http://localhost:${config.server.port + 1}/oauth/authorize to complete OAuth flow
+1. Visit https://nazareno-zcrm-mcp.interconnecta.ai/oauth/authorize to complete OAuth flow
 2. After authorization, refresh token will be saved automatically
 3. Server will use refresh token to get access tokens for API calls
 
