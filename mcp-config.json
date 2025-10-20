@@ -1,0 +1,150 @@
+{
+  "name": "zoho-crm-mcp",
+  "version": "1.0.0",
+  "description": "Zoho CRM MCP Server - Read-only access to Zoho CRM data",
+  "author": "InterConnecta",
+  "license": "MIT",
+  "mcp": {
+    "server": {
+      "name": "Zoho CRM MCP Server",
+      "version": "1.0.0",
+      "description": "Provides read-only access to Zoho CRM data including leads, contacts, accounts, deals, and more.",
+      "capabilities": {
+        "tools": true,
+        "resources": false,
+        "prompts": false
+      }
+    },
+    "tools": [
+      {
+        "name": "search_records",
+        "description": "Search records in any Zoho CRM module with criteria, pagination, and sorting",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "module": {
+              "type": "string",
+              "description": "CRM module name (e.g., Leads, Contacts, Accounts, Deals)",
+              "enum": ["Leads", "Contacts", "Accounts", "Deals", "Tasks", "Calls", "Meetings", "Events", "Products", "Quotes", "Sales_Orders", "Invoices", "Campaigns", "Cases", "Solutions", "Notes"]
+            },
+            "criteria": {
+              "type": "string",
+              "description": "Search criteria in format 'field:value'"
+            },
+            "page": {
+              "type": "integer",
+              "description": "Page number for pagination",
+              "default": 1,
+              "minimum": 1
+            },
+            "per_page": {
+              "type": "integer",
+              "description": "Number of records per page (max 200)",
+              "default": 25,
+              "minimum": 1,
+              "maximum": 200
+            },
+            "sort_by": {
+              "type": "string",
+              "description": "Field to sort by"
+            },
+            "sort_order": {
+              "type": "string",
+              "description": "Sort order",
+              "enum": ["asc", "desc"],
+              "default": "asc"
+            },
+            "fields": {
+              "type": "array",
+              "description": "Specific fields to return",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["module"]
+        }
+      },
+      {
+        "name": "get_record",
+        "description": "Get a specific record by ID from any Zoho CRM module",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "module": {
+              "type": "string",
+              "description": "CRM module name (e.g., Leads, Contacts, Accounts, Deals)",
+              "enum": ["Leads", "Contacts", "Accounts", "Deals", "Tasks", "Calls", "Meetings", "Events", "Products", "Quotes", "Sales_Orders", "Invoices", "Campaigns", "Cases", "Solutions", "Notes"]
+            },
+            "record_id": {
+              "type": "string",
+              "description": "Record ID to retrieve"
+            },
+            "fields": {
+              "type": "array",
+              "description": "Specific fields to return",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["module", "record_id"]
+        }
+      },
+      {
+        "name": "list_modules",
+        "description": "List all available Zoho CRM modules",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Type of modules to list",
+              "enum": ["all", "custom", "standard"],
+              "default": "all"
+            }
+          }
+        }
+      },
+      {
+        "name": "get_module_fields",
+        "description": "Get field metadata for a specific CRM module",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "module": {
+              "type": "string",
+              "description": "CRM module name (e.g., Leads, Contacts, Accounts, Deals)",
+              "enum": ["Leads", "Contacts", "Accounts", "Deals", "Tasks", "Calls", "Meetings", "Events", "Products", "Quotes", "Sales_Orders", "Invoices", "Campaigns", "Cases", "Solutions", "Notes"]
+            }
+          },
+          "required": ["module"]
+        }
+      },
+      {
+        "name": "health_check",
+        "description": "Check the health status of the server and Zoho CRM API connection",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    ]
+  },
+  "deployment": {
+    "openai": {
+      "server_url": "https://your-domain.com/mcp",
+      "authentication": {
+        "type": "bearer_token",
+        "description": "Use the server's API key for authentication"
+      },
+      "environment_variables": {
+        "ZOHO_CLIENT_ID": "Your Zoho OAuth Client ID",
+        "ZOHO_CLIENT_SECRET": "Your Zoho OAuth Client Secret",
+        "ZOHO_REGION": "com",
+        "NODE_ENV": "production",
+        "PORT": "8000"
+      }
+    }
+  }
+}
