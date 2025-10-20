@@ -82,9 +82,10 @@ jobs:
           mv deploy-package current
           rm deploy-package.tar.gz
           
-          # Install Node.js if not present
-          if ! command -v node &> /dev/null; then
-            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+          # Install Node.js 20 if not present or if version is < 20
+          NODE_VERSION=$(node --version 2>/dev/null | cut -d'v' -f2 | cut -d'.' -f1 || echo "0")
+          if ! command -v node &> /dev/null || [ "$NODE_VERSION" -lt 20 ]; then
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
             sudo apt-get install -y nodejs
           fi
           
@@ -106,11 +107,29 @@ jobs:
           # Navigate to application directory
           cd /var/www/nazareno-zcrm-mcp/current
           
-          # Install dependencies (including dev dependencies for build)
+          # Verify source files are present
+          if [ ! -d "src" ]; then
+            echo "❌ Source files not found!"
+            exit 1
+          fi
+          
+          # Install all dependencies (including dev dependencies for build)
+          echo "📦 Installing dependencies..."
           npm ci
           
           # Build the application
+          echo "🔨 Building application..."
           npm run build
+          
+          # Verify build was successful
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed - dist directory not found!"
+            exit 1
+          fi
+          
+          # Install only production dependencies after build
+          echo "📦 Installing production dependencies..."
+          npm ci --production
           
           # Create environment file if it doesn't exist
           if [ ! -f ".env" ]; then
@@ -143,7 +162,14 @@ jobs:
           pm2 stop nazareno-zcrm-mcp 2>/dev/null || true
           pm2 delete nazareno-zcrm-mcp 2>/dev/null || true
           
+          # Verify the built application exists
+          if [ ! -f "dist/server.js" ]; then
+            echo "❌ Built application not found at dist/server.js!"
+            exit 1
+          fi
+          
           # Start the application with PM2
+          echo "🚀 Starting application with PM2..."
           pm2 start dist/server.js \
             --name "nazareno-zcrm-mcp" \
             --cwd /var/www/nazareno-zcrm-mcp/current \
