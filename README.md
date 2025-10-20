@@ -57,10 +57,10 @@ LOG_LEVEL=info
 ### 3. Complete OAuth Flow
 
 1. **Start the server**: `npm run dev`
-2. **Visit the OAuth page**: http://localhost:8001/
+2. **Visit the OAuth page**: https://nazareno-zcrm-mcp.interconnecta.ai/oauth/
 3. **Click "Start OAuth Flow"** to begin authorization
 4. **Authorize the application** in Zoho
-5. **Tokens will be saved automatically** to your `.env` file
+5. **Tokens will be saved automatically** to your `tokens.json` file
 
 ## 🔐 OAuth Setup Process
 
@@ -68,7 +68,7 @@ LOG_LEVEL=info
 
 1. **Go to Zoho Developer Console**: https://api-console.zoho.com/
 2. **Create a new client** or use an existing one
-3. **Set the redirect URI** to: `http://localhost:8001/oauth/callback`
+3. **Set the redirect URI** to: `https://nazareno-zcrm-mcp.interconnecta.ai/oauth/callback`
 4. **Select the required scopes**:
    - `ZohoCRM.modules.ALL` - Access to all CRM modules
    - `ZohoCRM.users.ALL` - Access to user information

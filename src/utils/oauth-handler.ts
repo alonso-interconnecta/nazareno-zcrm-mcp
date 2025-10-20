@@ -20,7 +20,7 @@ export class OAuthHandler {
     this.clientId = config.zoho.clientId;
     this.clientSecret = config.zoho.clientSecret;
     this.region = config.zoho.region;
-    this.redirectUri = `http://localhost:${config.server.port + 1}/oauth/callback`;
+    this.redirectUri = `https://nazareno-zcrm-mcp.interconnecta.ai/oauth/callback`;
   }
 
   /**
