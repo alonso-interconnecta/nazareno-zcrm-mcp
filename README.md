@@ -260,12 +260,17 @@ zoho-crm-mcp/
 │   ├── types/           # TypeScript type definitions
 │   ├── utils/           # Utility functions
 │   └── server.ts        # Main server entry point
-├── scripts/             # Build and utility scripts
 ├── docs/                # Documentation
+│   ├── QUICK_START.md   # Quick setup guide
+│   ├── OPENAI_SETUP.md  # OpenAI MCP integration
+│   └── DEPLOYMENT.md    # Production deployment
+├── scripts/             # Build and utility scripts
 ├── tests/               # Test files
 ├── dist/                # Compiled JavaScript (generated)
 ├── package.json         # Project configuration
 ├── tsconfig.json        # TypeScript configuration
+├── Dockerfile           # Docker configuration
+├── docker-compose.yml   # Docker Compose setup
 └── README.md            # This file
 ```
 
@@ -327,52 +332,27 @@ LOG_LEVEL=debug
 DEBUG=zoho-crm-mcp:*
 ```
 
+## 📚 Documentation
+
+For detailed setup and deployment instructions, see the documentation in the `/docs` folder:
+
+- **[Quick Start Guide](docs/QUICK_START.md)** - Get up and running quickly
+- **[OpenAI MCP Setup](docs/OPENAI_SETUP.md)** - OpenAI MCP integration guide
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment instructions
+
 ## 🚀 Deployment
 
-### Docker (Recommended)
+For detailed deployment instructions, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY dist/ ./dist/
-EXPOSE 8000
-CMD ["node", "dist/server.js"]
-```
+### Quick Docker Deployment
 
-### PM2 Process Manager
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
 
-```json
-{
-  "name": "zoho-crm-mcp-server",
-  "script": "dist/server.js",
-  "instances": "max",
-  "exec_mode": "cluster",
-  "env": {
-    "NODE_ENV": "production",
-    "PORT": 8000
-  }
-}
-```
-
-### systemd Service
-
-```ini
-[Unit]
-Description=Zoho CRM MCP Server
-After=network.target
-
-[Service]
-Type=simple
-User=node
-WorkingDirectory=/opt/zoho-crm-mcp
-ExecStart=/usr/bin/node dist/server.js
-Restart=on-failure
-Environment=NODE_ENV=production
-
-[Install]
-WantedBy=multi-user.target
+# Or build manually
+docker build -t zoho-crm-mcp .
+docker run -d -p 8000:8000 -p 8001:8001 zoho-crm-mcp
 ```
 
 ## 🤝 Contributing
