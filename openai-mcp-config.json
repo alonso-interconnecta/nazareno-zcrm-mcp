@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "zoho-crm": {
+      "command": "node",
+      "args": ["/path/to/zoho-crm-mcp/dist/server.js"],
+      "env": {
+        "ZOHO_CLIENT_ID": "your_zoho_client_id",
+        "ZOHO_CLIENT_SECRET": "your_zoho_client_secret",
+        "ZOHO_REGION": "com",
+        "NODE_ENV": "production",
+        "PORT": "8000",
+        "HOST": "0.0.0.0"
+      }
+    }
+  }
+}
