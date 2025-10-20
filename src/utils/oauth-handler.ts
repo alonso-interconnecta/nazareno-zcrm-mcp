@@ -224,11 +224,11 @@ OAuth Flow:
       instructions = 'OAuth is configured and tokens are available. Server will use refresh token to get access tokens for API calls.';
     }
 
-    return { 
-      isConfigured, 
-      hasTokens, 
+    return {
+      isConfigured,
+      hasTokens,
       instructions,
-      redirectUri: `http://localhost:${config.server.port + 1}/oauth/callback`
+      redirectUri: `https://nazareno-zcrm-mcp.interconnecta.ai/oauth/callback`
     };
   }
 }
