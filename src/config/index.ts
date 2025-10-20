@@ -264,7 +264,7 @@ export function checkRequiredEnvVars(): void {
       
 Please ensure you have:
 1. Set ZOHO_CLIENT_ID and ZOHO_CLIENT_SECRET in your .env file
-2. Visit http://localhost:8001/oauth/authorize to complete OAuth flow
+2. Visit https://nazareno-zcrm-mcp.interconnecta.ai/oauth/authorize to complete OAuth flow
 
 Required variables:
 ${required.map(key => `  - ${key}`).join('\n')}
