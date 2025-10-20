@@ -1,0 +1,192 @@
+name: Deploy to Production Server
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build application
+      run: npm run build
+      
+    - name: Create deployment package
+      run: |
+        mkdir -p deploy-package
+        cp -r dist deploy-package/
+        cp package.json deploy-package/
+        cp package-lock.json deploy-package/
+        cp -r docs deploy-package/
+        cp Dockerfile deploy-package/
+        cp docker-compose.yml deploy-package/
+        cp env.example deploy-package/
+        cp README.md deploy-package/
+        cp mcp-config.json deploy-package/
+        cp openai-mcp-config.json deploy-package/
+        tar -czf deploy-package.tar.gz deploy-package/
+        
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: 3.80.105.135
+        username: ubuntu
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          # Create application directory
+          sudo mkdir -p /var/www/nazareno-zcrm-mcp
+          sudo chown ubuntu:ubuntu /var/www/nazareno-zcrm-mcp
+          
+          # Backup existing deployment if it exists
+          if [ -d "/var/www/nazareno-zcrm-mcp/current" ]; then
+            sudo mv /var/www/nazareno-zcrm-mcp/current /var/www/nazareno-zcrm-mcp/backup-$(date +%Y%m%d-%H%M%S)
+          fi
+          
+    - name: Copy files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: 3.80.105.135
+        username: ubuntu
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        source: "deploy-package.tar.gz"
+        target: "/var/www/nazareno-zcrm-mcp/"
+        
+    - name: Extract and setup on server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: 3.80.105.135
+        username: ubuntu
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /var/www/nazareno-zcrm-mcp
+          
+          # Extract new deployment
+          tar -xzf deploy-package.tar.gz
+          mv deploy-package current
+          rm deploy-package.tar.gz
+          
+          # Install Node.js if not present
+          if ! command -v node &> /dev/null; then
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+          fi
+          
+          # Install PM2 globally if not present
+          if ! command -v pm2 &> /dev/null; then
+            sudo npm install -g pm2
+          fi
+          
+          # Install pnpm if not present
+          if ! command -v pnpm &> /dev/null; then
+            sudo npm install -g pnpm
+          fi
+          
+          # Navigate to application directory
+          cd /var/www/nazareno-zcrm-mcp/current
+          
+          # Install dependencies
+          npm ci --production
+          
+          # Create environment file if it doesn't exist
+          if [ ! -f ".env" ]; then
+            cp env.example .env
+            echo "⚠️  Please configure your .env file with Zoho credentials"
+          fi
+          
+          # Create logs directory
+          mkdir -p logs
+          
+          # Create tokens.json if it doesn't exist
+          if [ ! -f "tokens.json" ]; then
+            echo '{}' > tokens.json
+          fi
+          
+          # Set proper permissions
+          sudo chown -R ubuntu:ubuntu /var/www/nazareno-zcrm-mcp
+          chmod +x dist/server.js
+          
+    - name: Deploy with PM2
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: 3.80.105.135
+        username: ubuntu
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /var/www/nazareno-zcrm-mcp/current
+          
+          # Stop existing PM2 process if running
+          pm2 stop nazareno-zcrm-mcp 2>/dev/null || true
+          pm2 delete nazareno-zcrm-mcp 2>/dev/null || true
+          
+          # Start the application with PM2
+          pm2 start dist/server.js \
+            --name "nazareno-zcrm-mcp" \
+            --cwd /var/www/nazareno-zcrm-mcp/current \
+            --env production \
+            --instances 1 \
+            --exec-mode fork \
+            --log /var/www/nazareno-zcrm-mcp/logs/app.log \
+            --error /var/www/nazareno-zcrm-mcp/logs/error.log \
+            --out /var/www/nazareno-zcrm-mcp/logs/out.log \
+            --time \
+            --restart-delay 5000 \
+            --max-restarts 10 \
+            --min-uptime 10s
+          
+          # Save PM2 configuration
+          pm2 save
+          
+          # Setup PM2 to start on boot
+          pm2 startup systemd -u ubuntu --hp /home/ubuntu
+          
+          # Wait for application to start
+          sleep 10
+          
+          # Health check
+          if curl -f http://localhost:8000/health; then
+            echo "✅ Application deployed successfully!"
+            echo "🌐 MCP Server: http://3.80.105.135:8000"
+            echo "🔐 OAuth Setup: http://3.80.105.135:8001"
+          else
+            echo "❌ Health check failed!"
+            pm2 logs nazareno-zcrm-mcp --lines 20
+            exit 1
+          fi
+          
+    - name: Verify deployment
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: 3.80.105.135
+        username: ubuntu
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          # Check PM2 status
+          pm2 list
+          
+          # Check if both applications are running
+          echo "📊 PM2 Process Status:"
+          pm2 jlist | jq -r '.[] | "\(.name): \(.pm2_env.status)"' 2>/dev/null || pm2 list
+          
+          # Check ports
+          echo "🔌 Port Status:"
+          netstat -tlnp | grep -E ':(8000|8001)' || echo "Ports not listening"
+          
+          # Check application health
+          echo "❤️ Health Check:"
+          curl -s http://localhost:8000/health | jq . 2>/dev/null || curl -s http://localhost:8000/health
+          
+          echo "✅ Deployment verification complete!"
