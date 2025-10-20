@@ -136,16 +136,7 @@ jobs:
           pm2 start dist/server.js \
             --name "nazareno-zcrm-mcp" \
             --cwd /var/www/nazareno-zcrm-mcp/current \
-            --env production \
-            --instances 1 \
-            --exec-mode fork \
-            --log /var/www/nazareno-zcrm-mcp/logs/app.log \
-            --error /var/www/nazareno-zcrm-mcp/logs/error.log \
-            --out /var/www/nazareno-zcrm-mcp/logs/out.log \
-            --time \
-            --restart-delay 5000 \
-            --max-restarts 10 \
-            --min-uptime 10s
+            --env production
           
           # Save PM2 configuration
           pm2 save
