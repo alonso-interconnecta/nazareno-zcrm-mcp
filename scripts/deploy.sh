@@ -61,10 +61,12 @@ log_success "Build completed successfully!"
 # Create deployment package
 log_info "Creating deployment package..."
 mkdir -p deploy-package
-cp -r dist deploy-package/
-cp package.json deploy-package/
-cp package-lock.json deploy-package/
-cp ecosystem.config.js deploy-package/
+        cp -r src deploy-package/
+        cp -r dist deploy-package/
+        cp package.json deploy-package/
+        cp package-lock.json deploy-package/
+        cp tsconfig.json deploy-package/
+        cp ecosystem.config.js deploy-package/
 cp -r docs deploy-package/
 cp Dockerfile deploy-package/
 cp docker-compose.yml deploy-package/
@@ -126,9 +128,13 @@ ssh -i nazareno-default.pem -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOS
     # Navigate to application directory
     cd $APP_PATH/current
     
-    # Install dependencies
+    # Install dependencies (including dev dependencies for build)
     log_info 'Installing dependencies...'
-    npm ci --production
+    npm ci
+    
+    # Build the application
+    log_info 'Building application...'
+    npm run build
     
     # Create environment file if it doesn't exist
     if [ ! -f '.env' ]; then

@@ -28,9 +28,11 @@ jobs:
     - name: Create deployment package
       run: |
         mkdir -p deploy-package
+        cp -r src deploy-package/
         cp -r dist deploy-package/
         cp package.json deploy-package/
         cp package-lock.json deploy-package/
+        cp tsconfig.json deploy-package/
         cp -r docs deploy-package/
         cp Dockerfile deploy-package/
         cp docker-compose.yml deploy-package/
@@ -38,6 +40,7 @@ jobs:
         cp README.md deploy-package/
         cp mcp-config.json deploy-package/
         cp openai-mcp-config.json deploy-package/
+        cp ecosystem.config.js deploy-package/
         tar -czf deploy-package.tar.gz deploy-package/
         
     - name: Deploy to server
@@ -95,11 +98,19 @@ jobs:
             sudo npm install -g pnpm
           fi
           
+          # Install TypeScript globally if not present
+          if ! command -v tsc &> /dev/null; then
+            sudo npm install -g typescript
+          fi
+          
           # Navigate to application directory
           cd /var/www/nazareno-zcrm-mcp/current
           
-          # Install dependencies
-          npm ci --production
+          # Install dependencies (including dev dependencies for build)
+          npm ci
+          
+          # Build the application
+          npm run build
           
           # Create environment file if it doesn't exist
           if [ ! -f ".env" ]; then
