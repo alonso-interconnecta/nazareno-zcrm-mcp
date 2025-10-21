@@ -4,6 +4,7 @@
  * Using FastMCP framework for automatic SSE transport handling
  */
 
+import './polyfills.js';
 import { FastMCP } from 'fastmcp';
 import express from 'express';
 import { config, checkRequiredEnvVars } from './config/index.js';
